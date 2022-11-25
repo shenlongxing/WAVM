@@ -285,7 +285,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
 	wavm_add_c_cxx_flag_if_supported("-Wswitch-default")
 	
 	wavm_add_c_cxx_flag_if_supported("-Wnull-dereference")
-	wavm_add_c_cxx_flag_if_supported("-Wduplicated-cond")
 	wavm_add_c_cxx_flag_if_supported("-Wduplicated-branches")
 	wavm_add_c_cxx_flag_if_supported("-Wlogical-op")
 	wavm_add_cxx_flag_if_supported("-Wnon-virtual-dtor")
@@ -693,6 +692,7 @@ elseif(NOT WAVM_ENABLE_STATIC_LINKING AND CXX_HAS_FVISIBILITY_HIDDEN)
 	target_compile_definitions(libWAVM PUBLIC "WAVM_API=__attribute__((visibility(\"default\")))")
 else()
 	target_compile_definitions(libWAVM PUBLIC "WAVM_API=")
+	target_compile_definitions(libWAVM PUBLIC "-D__STDC_FORMAT_MACROS")
 endif()
 
 # Process the CMake scripts in subdirectories.

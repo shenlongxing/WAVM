@@ -41,7 +41,7 @@ else()
 	
 	set(UNWIND_COMPILER_OPTIONS)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		list(APPEND UNWIND_COMPILER_OPTIONS "-Wno-maybe-uninitialized" "-Wno-unused-but-set-variable")
+		list(APPEND UNWIND_COMPILER_OPTIONS "-Wno-maybe-uninitialized" "-Wno-unused-but-set-variable" "-D__STDC_FORMAT_MACROS")
 	endif()
 
 	WAVM_ADD_THIRD_PARTY_LIBRARY(WAVMUnwind

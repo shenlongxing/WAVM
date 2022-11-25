@@ -57,7 +57,7 @@ static Memory* createMemoryImpl(Compartment* compartment,
 		// For 32-bit memories on a 64-bit runtime, allocate 8GB of address space for the memory.
 		// This allows eliding bounds checks on memory accesses, since a 32-bit index + 32-bit
 		// offset will always be within the reserved address-space.
-		memoryMaxPages = (Uptr(8) * 1024 * 1024 * 1024) >> pageBytesLog2;
+		memoryMaxPages = type.size.max << getPlatformPagesPerWebAssemblyPageLog2();;
 	}
 	else
 	{

@@ -545,7 +545,13 @@ struct POSIXFD : VFD
 		// utimes takes a path instead of a fd, so use the BSD fcntl(F_GETPATH) to get the path to
 		// the fd's file.
 		char fdPath[PATH_MAX + 1];
+#ifdef F_GETPATH
 		if(fcntl(fd, F_GETPATH, fdPath)) { return asVFSResult(errno); }
+#else
+		char procPath[64];
+		snprintf(procPath, sizeof(procPath), "/proc/self/fd/%d", fd);
+		if (readlink(procPath, fdPath, sizeof(fdPath) - 1) == -1) { return asVFSResult(errno); }
+#endif
 		fdPath[PATH_MAX] = 0;
 
 		return utimes(fdPath, timevals) == 0 ? Result::success : asVFSResult(errno);
