@@ -783,7 +783,7 @@ struct State
 		}
 		else if(abi == ABI::wasi)
 		{
-			linkResult = linkModule(irModule, WASI::getProcessResolver(*wasiProcess));
+			linkResult = linkModule(irModule, WASI::getProcessResolver(*wasiProcess), compartment);
 		}
 		else if(abi == ABI::bare)
 		{

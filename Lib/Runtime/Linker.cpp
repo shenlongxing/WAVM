@@ -149,7 +149,8 @@ static void linkImport(const IR::Module& module,
 					   const Import<Type>& import,
 					   ResolvedType resolvedType,
 					   Resolver& resolver,
-					   LinkResult& linkResult)
+					   LinkResult& linkResult,
+					   Compartment* compartment = nullptr)
 {
 	// Ask the resolver for a value for this import.
 	Object* importValue;
@@ -162,12 +163,19 @@ static void linkImport(const IR::Module& module,
 	}
 	else
 	{
-		linkResult.missingImports.push_back({import.moduleName, import.exportName, resolvedType});
-		linkResult.resolvedImports.push_back(nullptr);
+		// 这里判断是不是通用的xagent import接口，如果是，则返回一个stub object
+		if (import.exportName.find("wasi32_xagent_") != std::string::npos) {
+			Object* stubImportValue;
+			generateStub(import.moduleName, import.exportName, resolvedType, stubImportValue, compartment);
+			linkResult.resolvedImports.push_back(stubImportValue);
+    } else {
+			linkResult.missingImports.push_back({import.moduleName, import.exportName, resolvedType});
+			linkResult.resolvedImports.push_back(nullptr);
+    }
 	}
 }
 
-LinkResult Runtime::linkModule(const IR::Module& module, Resolver& resolver)
+LinkResult Runtime::linkModule(const IR::Module& module, Resolver& resolver, Compartment* compartment)
 {
 	LinkResult linkResult;
 	WAVM_ASSERT(module.imports.size()
@@ -184,7 +192,8 @@ LinkResult Runtime::linkModule(const IR::Module& module, Resolver& resolver)
 					   functionImport,
 					   module.types[functionImport.type.index],
 					   resolver,
-					   linkResult);
+					   linkResult,
+					   compartment);
 			break;
 		}
 		case ExternKind::table: {
