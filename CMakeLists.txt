@@ -727,6 +727,12 @@ if(WAVM_ENABLE_UNWIND)
 	add_subdirectory(ThirdParty/libunwind)
 endif()
 
+option(WAVM_DISABLE_HW_BOUND_CHECK "disable hw bound check" OFF)
+if (WAVM_DISABLE_HW_BOUND_CHECK)
+  set(OS_ENABLE_HW_BOUND_CHECK OFF)
+  message ("     Hardware boundary check disabled")
+endif()
+
 # Add the library dependencies accumulated from the various library components as link dependencies
 # of the monolithic WAVM library.
 target_link_libraries(libWAVM PRIVATE ${WAVM_MONOLIB_PRIVATE_LIBS})
