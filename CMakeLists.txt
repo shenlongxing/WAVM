@@ -729,8 +729,10 @@ endif()
 
 option(WAVM_DISABLE_HW_BOUND_CHECK "disable hw bound check" OFF)
 if (WAVM_DISABLE_HW_BOUND_CHECK)
-  set(OS_ENABLE_HW_BOUND_CHECK OFF)
   message ("     Hardware boundary check disabled")
+else()
+  add_definitions(-DOS_ENABLE_HW_BOUND_CHECK)
+  message ("     Hardware boundary check enabled")
 endif()
 
 # Add the library dependencies accumulated from the various library components as link dependencies

@@ -107,6 +107,18 @@ Memory* Runtime::createMemory(Compartment* compartment,
 							  ResourceQuotaRefParam resourceQuota)
 {
 	WAVM_ASSERT(type.size.min <= UINTPTR_MAX);
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+  // 动态内存模式，initial-memory 必须小于 max-memory
+  if(type.size.min >= type.size.max)
+  {
+    fprintf(stderr,
+            "Illegal module memory, "
+            "initial-memory(%luB) should less than max-memory(%luB).\n",
+            type.size.min << IR::numBytesPerPageLog2,
+            type.size.max << IR::numBytesPerPageLog2);
+    return nullptr;
+  }
+#endif
 	Memory* memory = createMemoryImpl(compartment, type, std::move(debugName), resourceQuota);
 	if(!memory) { return nullptr; }
 
@@ -270,8 +282,9 @@ GrowResult Runtime::growMemory(Memory* memory, Uptr numPagesToGrow, Uptr* outOld
 			   memory->baseAddress + oldNumPages * IR::numBytesPerPage,
 			   numPagesToGrow << getPlatformPagesPerWebAssemblyPageLog2()))
 #else
+		U8 *ori_addr = memory->baseAddress;
 		if(!commitVirtualPages(&memory->baseAddress,
-               oldNumPages * IR::numBytesPerPage + (numPagesToGrow << getPlatformPagesPerWebAssemblyPageLog2())))
+               (oldNumPages + numPagesToGrow) << getPlatformPagesPerWebAssemblyPageLog2()))
 #endif
 		{
 			if(memory->resourceQuota) { memory->resourceQuota->memoryPages.free(numPagesToGrow); }
@@ -286,6 +299,11 @@ GrowResult Runtime::growMemory(Memory* memory, Uptr numPagesToGrow, Uptr* outOld
 		{
 			memory->compartment->runtimeData->memories[memory->id].numPages.store(
 				newNumPages, std::memory_order_release);
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+			if (ori_addr != memory->baseAddress) {
+				memory->compartment->runtimeData->memories[memory->id].base = memory->baseAddress;
+			}
+#endif
 		}
 	}
 
