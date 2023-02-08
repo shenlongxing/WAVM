@@ -57,7 +57,7 @@ static Memory* createMemoryImpl(Compartment* compartment,
 		// For 32-bit memories on a 64-bit runtime, allocate 8GB of address space for the memory.
 		// This allows eliding bounds checks on memory accesses, since a 32-bit index + 32-bit
 		// offset will always be within the reserved address-space.
-		memoryMaxPages = type.size.max << getPlatformPagesPerWebAssemblyPageLog2();;
+		memoryMaxPages = type.size.max << getPlatformPagesPerWebAssemblyPageLog2();
 	}
 	else
 	{
@@ -69,7 +69,11 @@ static Memory* createMemoryImpl(Compartment* compartment,
 	}
 
 	const Uptr numGuardPages = memoryNumGuardBytes >> pageBytesLog2;
+#ifdef OS_ENABLE_HW_BOUND_CHECK
 	memory->baseAddress = Platform::allocateVirtualPages(memoryMaxPages + numGuardPages);
+#else
+	memory->baseAddress = allocateVirtualPages((type.size.min << getPlatformPagesPerWebAssemblyPageLog2()) + numGuardPages);
+#endif
 	memory->numReservedBytes = memoryMaxPages << pageBytesLog2;
 	if(!memory->baseAddress)
 	{
@@ -78,7 +82,11 @@ static Memory* createMemoryImpl(Compartment* compartment,
 	}
 
 	// Grow the memory to the type's minimum size.
+#ifdef OS_ENABLE_HW_BOUND_CHECK
 	if(growMemory(memory, type.size.min) != GrowResult::success)
+#else
+	if(growMemory(memory, type.size.min + (memoryNumGuardBytes >> IR::numBytesPerPageLog2)) != GrowResult::success)
+#endif
 	{
 		delete memory;
 		return nullptr;
@@ -99,6 +107,18 @@ Memory* Runtime::createMemory(Compartment* compartment,
 							  ResourceQuotaRefParam resourceQuota)
 {
 	WAVM_ASSERT(type.size.min <= UINTPTR_MAX);
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+  // 动态内存模式，initial-memory 必须小于 max-memory
+  if(type.size.min >= type.size.max)
+  {
+    fprintf(stderr,
+            "Illegal module memory, "
+            "initial-memory(%luB) should less than max-memory(%luB).\n",
+            type.size.min << IR::numBytesPerPageLog2,
+            type.size.max << IR::numBytesPerPageLog2);
+    return nullptr;
+  }
+#endif
 	Memory* memory = createMemoryImpl(compartment, type, std::move(debugName), resourceQuota);
 	if(!memory) { return nullptr; }
 
@@ -186,8 +206,13 @@ Runtime::Memory::~Memory()
 	const Uptr pageBytesLog2 = Platform::getBytesPerPageLog2();
 	if(baseAddress && numReservedBytes > 0)
 	{
+#ifdef OS_ENABLE_HW_BOUND_CHECK
 		Platform::freeVirtualPages(baseAddress,
 								   (numReservedBytes + memoryNumGuardBytes) >> pageBytesLog2);
+#else
+		freeVirtualPages(baseAddress,
+						(numReservedBytes + memoryNumGuardBytes) >> pageBytesLog2);
+#endif
 
 		Platform::deregisterVirtualAllocation(numPages >> pageBytesLog2);
 	}
@@ -252,9 +277,15 @@ GrowResult Runtime::growMemory(Memory* memory, Uptr numPagesToGrow, Uptr* outOld
 		}
 
 		// Try to commit the new pages, and return GrowResult::outOfMemory if the commit fails.
+#ifdef OS_ENABLE_HW_BOUND_CHECK
 		if(!Platform::commitVirtualPages(
 			   memory->baseAddress + oldNumPages * IR::numBytesPerPage,
 			   numPagesToGrow << getPlatformPagesPerWebAssemblyPageLog2()))
+#else
+		U8 *ori_addr = memory->baseAddress;
+		if(!commitVirtualPages(&memory->baseAddress,
+               (oldNumPages + numPagesToGrow) << getPlatformPagesPerWebAssemblyPageLog2()))
+#endif
 		{
 			if(memory->resourceQuota) { memory->resourceQuota->memoryPages.free(numPagesToGrow); }
 			return GrowResult::outOfMemory;
@@ -268,6 +299,11 @@ GrowResult Runtime::growMemory(Memory* memory, Uptr numPagesToGrow, Uptr* outOld
 		{
 			memory->compartment->runtimeData->memories[memory->id].numPages.store(
 				newNumPages, std::memory_order_release);
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+			if (ori_addr != memory->baseAddress) {
+				memory->compartment->runtimeData->memories[memory->id].base = memory->baseAddress;
+			}
+#endif
 		}
 	}
 
@@ -440,3 +476,46 @@ WAVM_DEFINE_INTRINSIC_FUNCTION(wavmIntrinsics,
 
 	throwException(ExceptionTypes::outOfBoundsMemoryAccess, {memory, outOfBoundsAddress});
 }
+
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+WAVM_API U8* Runtime::allocateVirtualPages(Uptr numPages)
+{
+    Uptr numBytes = numPages << Platform::getBytesPerPageLog2();
+    void* result = malloc(numBytes);
+    if(!result)
+    {
+        if(errno != ENOMEM)
+        {
+            fprintf(stderr,
+            "malloc(%" WAVM_PRIuPTR") failed! errno=%s\n",
+            numBytes,
+            strerror(errno));
+        }
+        return nullptr;
+    }
+	memset(result, 0, numBytes);
+    return (U8*)result;
+}
+
+WAVM_API bool Runtime::commitVirtualPages(U8** baseVirtualAddress, Uptr numPages)
+{
+    // 不同于mmap，malloc/realloc返回的起始地址不以4K对齐
+    //WAVM_ERROR_UNLESS(isPageAligned(*baseVirtualAddress));
+    U8* addr = (U8 *)realloc(*baseVirtualAddress, numPages << Platform::getBytesPerPageLog2());
+	if (!addr) {
+        fprintf(stderr,
+        "realloc(0x%" WAVM_PRIxPTR ", %" WAVM_PRIuPTR ",) failed: %s\n",
+        reinterpret_cast<Uptr>(*baseVirtualAddress),
+        numPages << Platform::getBytesPerPageLog2(),
+        strerror(errno));
+        return false;
+	}
+	*baseVirtualAddress = addr;
+    return true;
+}
+
+WAVM_API void Runtime::freeVirtualPages(U8* baseVirtualAddress, Uptr numPages)
+{
+    free(baseVirtualAddress);
+}
+#endif

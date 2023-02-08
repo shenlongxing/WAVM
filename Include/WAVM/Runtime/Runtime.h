@@ -570,4 +570,10 @@ namespace WAVM { namespace Runtime {
 	};
 
 	WAVM_API void setGlobalObjectCache(std::shared_ptr<ObjectCacheInterface>&& objectCache);
+
+#ifndef OS_ENABLE_HW_BOUND_CHECK
+	WAVM_API U8* allocateVirtualPages(Uptr numPages);
+	WAVM_API bool commitVirtualPages(U8** baseVirtualAddress, Uptr bytes);
+	WAVM_API void freeVirtualPages(U8* baseVirtualAddress, Uptr numPages);
+#endif
 }}
