@@ -39,7 +39,8 @@ namespace WAVM { namespace LLVMJIT {
 		x86CPUDoesNotSupportSSE41,
 		wavmDoesNotSupportSIMDOnArch,
 		memory64Requires64bitTarget,
-		table64Requires64bitTarget
+		table64Requires64bitTarget,
+		unableToGetHostCPUFeatures
 	};
 
 	WAVM_API TargetSpec getHostTargetSpec();
