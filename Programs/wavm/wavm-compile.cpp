@@ -229,6 +229,10 @@ int execCompileCommand(int argc, char** argv)
 	case LLVMJIT::TargetValidationResult::unsupportedArchitecture:
 		Log::printf(Log::error, "WAVM doesn't support the target architecture.\n");
 		return EXIT_FAILURE;
+	case LLVMJIT::TargetValidationResult::unableToGetHostCPUFeatures:
+		Log::printf(Log::error,"Unable to get Host X86 CPU (%s) Features\n",
+					   targetSpec.cpu.c_str());
+		return EXIT_FAILURE;
 	case LLVMJIT::TargetValidationResult::x86CPUDoesNotSupportSSE41:
 		Log::printf(Log::error,
 					"Target X86 CPU (%s) does not support SSE 4.1, which"

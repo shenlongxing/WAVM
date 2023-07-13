@@ -185,6 +185,9 @@ static std::unique_ptr<llvm::TargetMachine> getAndValidateTargetMachine(
 		Errors::fatalf("Unsupported target architecture (triple=%s, cpu=%s)",
 					   targetSpec.triple.c_str(),
 					   targetSpec.cpu.c_str());
+	case TargetValidationResult::unableToGetHostCPUFeatures:
+		Errors::fatalf("Unable to get Host X86 CPU (%s) Features\n",
+					   targetSpec.cpu.c_str());
 	case TargetValidationResult::x86CPUDoesNotSupportSSE41:
 		Errors::fatalf(
 			"Target X86 CPU (%s) does not support SSE 4.1, which"

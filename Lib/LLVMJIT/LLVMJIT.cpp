@@ -198,8 +198,13 @@ TargetValidationResult LLVMJIT::validateTargetMachine(
 	const llvm::Triple::ArchType targetArch = targetMachine->getTargetTriple().getArch();
 	if(targetArch == llvm::Triple::x86_64)
 	{
+		llvm::StringMap<bool> targetFeatures;
+		if (!llvm::sys::getHostCPUFeatures(targetFeatures))
+		{ return TargetValidationResult::unableToGetHostCPUFeatures; }
+
 		// If the SIMD feature is enabled, then require the SSE4.1 CPU feature.
-		if(featureSpec.simd && !targetMachine->getMCSubtargetInfo()->checkFeatures("+sse4.1"))
+		// if(featureSpec.simd && !targetMachine->getMCSubtargetInfo()->checkFeatures("+sse4.1"))
+		if(featureSpec.simd && !targetFeatures["sse4.1"])
 		{ return TargetValidationResult::x86CPUDoesNotSupportSSE41; }
 
 		return TargetValidationResult::valid;

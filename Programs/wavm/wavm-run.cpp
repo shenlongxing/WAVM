@@ -400,6 +400,10 @@ struct State
 		case LLVMJIT::TargetValidationResult::unsupportedArchitecture:
 			Log::printf(Log::error, "Host architecture is not supported by WAVM.");
 			return false;
+		case LLVMJIT::TargetValidationResult::unableToGetHostCPUFeatures:
+			Log::printf(Log::error,
+						"Unable to get Host X86 CPU Features\n");
+			return false;
 		case LLVMJIT::TargetValidationResult::x86CPUDoesNotSupportSSE41:
 			Log::printf(Log::error,
 						"Host X86 CPU does not support SSE 4.1, which"
