@@ -66,6 +66,7 @@ include(CPack)
 option(WAVM_ENABLE_STATIC_LINKING "use static linking instead of dynamic for the WAVM libraries" OFF)
 option(WAVM_ENABLE_RELEASE_ASSERTS "enable assertions in release builds" 0)
 set(WAVM_ENABLE_LTO "OFF" CACHE STRING "enable link-time optimization (off, on, or thin)")
+option(WAVM_DISABLE_SPLIT_DWARF "disable gcc -gsplit-dwarf feature" OFF)
 
 option(WAVM_ENABLE_FUZZ_TARGETS "build the fuzz targets" ON)
 
@@ -355,7 +356,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
 	if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR UPPERCASE_WAVM_ENABLE_LTO STREQUAL "OFF")
 		# If the compiler supports it, use -gsplit-dwarf for the configurations that build debug info.
 		wavm_check_cxx_compiler_flag("-gsplit-dwarf" CXX_HAS_GSPLIT_DWARF)
-		if(CXX_HAS_GSPLIT_DWARF)
+        if(WAVM_DISABLE_SPLIT_DWARF AND CXX_HAS_GSPLIT_DWARF)
 			set(CMAKE_C_FLAGS_RELWITHDEBINFO   "${CMAKE_C_FLAGS_RELWITHDEBINFO}   -gsplit-dwarf")
 			set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -gsplit-dwarf")
 			set(CMAKE_C_FLAGS_DEBUG            "${CMAKE_C_FLAGS_DEBUG}            -gsplit-dwarf")
