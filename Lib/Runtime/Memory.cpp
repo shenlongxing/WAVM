@@ -274,7 +274,7 @@ GrowResult Runtime::growMemory(Memory* memory, Uptr numPagesToGrow, Uptr* outOld
 		{
 			if(memory->resourceQuota) { memory->resourceQuota->memoryPages.free(numPagesToGrow); }
 #ifndef OS_ENABLE_HW_BOUND_CHECK
-      throwException(ExceptionTypes::outOfMaxSize);
+			throwException(ExceptionTypes::outOfMaxSize);
 #endif
 			return GrowResult::outOfMaxSize;
 		}
