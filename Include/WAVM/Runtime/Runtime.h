@@ -180,6 +180,7 @@ namespace WAVM { namespace Runtime {
 	visit(calledAbort);                                                                            \
 	visit(calledUnimplementedIntrinsic);                                                           \
 	visit(outOfMemory);                                                                            \
+	visit(outOfMaxSize);                                                                           \
 	visit(misalignedAtomicMemoryAccess, WAVM::IR::ValueType::i64);                                 \
 	visit(waitOnUnsharedMemory, WAVM::IR::ValueType::externref);                                   \
 	visit(invalidArgument);
