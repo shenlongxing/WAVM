@@ -58,6 +58,7 @@ namespace LLVMRuntimeSymbols {
 		{"__bzero", (void*)&__bzero},
 #endif
 #if defined(__i386__) || defined(__x86_64__)
+		{"ceilf", (void*)&ceilf},
 		{"wavm_probe_stack", (void*)&wavm_probe_stack},
 #endif
 		{"__gxx_personality_v0", (void*)&__gxx_personality_v0},
