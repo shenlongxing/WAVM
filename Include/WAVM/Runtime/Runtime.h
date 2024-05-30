@@ -479,6 +479,8 @@ namespace WAVM { namespace Runtime {
 	// Gets an object exported by a Instance by name.
 	WAVM_API Object* getInstanceExport(const Instance* instance, const std::string& name);
 
+	WAVM_API void getInstanceFunctions(const Instance* instance, std::vector<Function*>& functions);
+
 	// Gets an object exported by a Instance by name and type. If the module exports an object
 	// with the given name, but the type doesn't match, returns nullptr.
 	WAVM_API Object* getTypedInstanceExport(const Instance* instance,

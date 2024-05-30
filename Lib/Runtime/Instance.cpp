@@ -559,6 +559,13 @@ Object* Runtime::getInstanceExport(const Instance* instance, const std::string& 
 	return exportedObjectPtr ? *exportedObjectPtr : nullptr;
 }
 
+void Runtime::getInstanceFunctions(const Instance* instance, 
+								   std::vector<Function*>& functions)
+{
+	WAVM_ASSERT(instance);
+	functions = instance->functions;
+}
+
 Object* Runtime::getTypedInstanceExport(const Instance* instance,
 										const std::string& name,
 										const IR::ExternType& type)
