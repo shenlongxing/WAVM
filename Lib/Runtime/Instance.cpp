@@ -327,7 +327,8 @@ Instance* Runtime::instantiateModuleInternal(Compartment* compartment,
 							  {id},
 							  reinterpret_cast<Uptr>(getOutOfBoundsElement()),
 							  functionDefMutableDatas,
-							  std::string(moduleDebugName));
+							  std::string(moduleDebugName),
+							  disassemblyNames);
 
 	// LLVMJIT::loadModule filled in the functionDefMutableDatas' function pointers with the
 	// compiled functions. Add those functions to the module.

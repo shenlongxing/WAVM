@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "WAVM/IR/Module.h"
 #include "WAVM/IR/Types.h"
 #include "WAVM/Inline/BasicTypes.h"
 #include "WAVM/Inline/HashMap.h"
@@ -13,6 +14,7 @@ namespace WAVM { namespace IR {
 	struct Module;
 	struct UntaggedValue;
 	struct FeatureSpec;
+	struct DisassemblyNames;
 
 	enum class CallingConvention;
 }}
@@ -126,7 +128,8 @@ namespace WAVM { namespace LLVMJIT {
 		InstanceBinding instance,
 		Uptr tableReferenceBias,
 		const std::vector<Runtime::FunctionMutableData*>& functionDefMutableDatas,
-		std::string&& debugName);
+		std::string&& debugName,
+		IR::DisassemblyNames& disassemblyNames);
 
 	struct InstructionSource
 	{
