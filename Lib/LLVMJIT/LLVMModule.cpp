@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 #include "LLVMJITPrivate.h"
+#include "WAVM/IR/Module.h"
 #include "WAVM/IR/Types.h"
 #include "WAVM/Inline/Assert.h"
 #include "WAVM/Inline/BasicTypes.h"
@@ -659,7 +660,8 @@ std::shared_ptr<LLVMJIT::Module> LLVMJIT::loadModule(
 	InstanceBinding instance,
 	Uptr tableReferenceBias,
 	const std::vector<Runtime::FunctionMutableData*>& functionDefMutableDatas,
-	std::string&& debugName)
+	std::string&& debugName,
+	IR::DisassemblyNames& disassemblyNames)
 {
 	// Bind undefined symbols in the compiled object to values.
 	HashMap<std::string, Uptr> importedSymbolMap;
@@ -682,7 +684,11 @@ std::shared_ptr<LLVMJIT::Module> LLVMJIT::loadModule(
 	// Bind imported function symbols.
 	for(Uptr importIndex = 0; importIndex < functionImports.size(); ++importIndex)
 	{
-		importedSymbolMap.addOrFail(getExternalName("functionImport", importIndex),
+		std::string functionName = "";
+		if (disassemblyNames.functions[importIndex].name.size()) {
+			functionName = "_" + disassemblyNames.functions[importIndex].name;
+		}
+		importedSymbolMap.addOrFail(getExternalName("functionImport", importIndex) + functionName,
 									reinterpret_cast<Uptr>(functionImports[importIndex].code));
 	}
 

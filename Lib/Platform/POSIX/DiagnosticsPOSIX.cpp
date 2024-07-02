@@ -79,6 +79,11 @@ bool Platform::getInstructionSourceByAddress(Uptr ip, InstructionSource& outSour
 					outSource.function = demangledBuffer;
 					free(demangledBuffer);
 				}
+				// keep C function name start with "_"
+				else
+				{
+					outSource.function = symbolInfo.dli_sname;
+				}
 			}
 			else
 			{
