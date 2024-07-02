@@ -39,8 +39,8 @@ pushd ../../ && mkdir build && cd build && cmake .. -DLLVM=/home/docker/xiangjia
 # 测试 sleep3
 
 ```sh
-./bin/wavm run ../Test/backtrace/sleep.wasm
-./bin/wavm run ../Test/backtrace/sleep_pf.wasm
+./bin/wavm run ../Test/backtrace/sleep3.wasm
+./bin/wavm run ../Test/backtrace/sleep3_pf.wasm
 ```
 
 期望结果

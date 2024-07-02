@@ -684,7 +684,10 @@ std::shared_ptr<LLVMJIT::Module> LLVMJIT::loadModule(
 	// Bind imported function symbols.
 	for(Uptr importIndex = 0; importIndex < functionImports.size(); ++importIndex)
 	{
-		std::string functionName = "_" + disassemblyNames.functions[importIndex].name;
+		std::string functionName = "";
+		if (disassemblyNames.functions[importIndex].name.size()) {
+			functionName = "_" + disassemblyNames.functions[importIndex].name;
+		}
 		importedSymbolMap.addOrFail(getExternalName("functionImport", importIndex) + functionName,
 									reinterpret_cast<Uptr>(functionImports[importIndex].code));
 	}
